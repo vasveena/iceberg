@@ -98,9 +98,6 @@ public class LocationProviders {
           properties, TableProperties.WRITE_TARGET_FILE_HASH_COUNT, TableProperties.WRITE_TARGET_FILE_HASH_COUNT_DEFAULT);
     }
 
-    //private final Transform<String, Integer> HASH_FUNC = Transforms
-    //    .bucket(Types.StringType.get(), writeTargetHashCount);
-
     @Override
     public String newDataLocation(PartitionSpec spec, StructLike partitionData, String filename) {
       return newDataLocation(String.format("%s/%s", spec.partitionToPath(partitionData), filename));
