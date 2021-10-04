@@ -28,14 +28,12 @@ import org.apache.iceberg.transforms.Transform;
 import org.apache.iceberg.transforms.Transforms;
 import org.apache.iceberg.types.Types;
 import org.apache.iceberg.util.PropertyUtil;
-
-import static org.apache.iceberg.TableProperties.OBJECT_STORE_PATH;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocationProviders {
-
   private LocationProviders() {
   }
-
   public static LocationProvider locationsFor(String location, Map<String, String> properties) {
     if (properties.containsKey(TableProperties.WRITE_LOCATION_PROVIDER_IMPL)) {
       String impl = properties.get(TableProperties.WRITE_LOCATION_PROVIDER_IMPL);
@@ -89,16 +87,19 @@ public class LocationProviders {
   }
 
   static class ObjectStoreLocationProvider implements LocationProvider {
-    private static final Transform<String, Integer> HASH_FUNC = Transforms
-        .bucket(Types.StringType.get(), Integer.MAX_VALUE);
-
     private final String storageLocation;
     private final String context;
+    private final int writeTargetHashCount;
 
     ObjectStoreLocationProvider(String tableLocation, Map<String, String> properties) {
-      this.storageLocation = stripTrailingSlash(properties.get(OBJECT_STORE_PATH));
+      this.storageLocation = stripTrailingSlash(properties.get(TableProperties.OBJECT_STORE_PATH));
       this.context = pathContext(tableLocation);
+      this.writeTargetHashCount = PropertyUtil.propertyAsInt(
+          properties, TableProperties.WRITE_TARGET_FILE_HASH_COUNT, TableProperties.WRITE_TARGET_FILE_HASH_COUNT_DEFAULT);
     }
+
+    //private final Transform<String, Integer> HASH_FUNC = Transforms
+    //    .bucket(Types.StringType.get(), writeTargetHashCount);
 
     @Override
     public String newDataLocation(PartitionSpec spec, StructLike partitionData, String filename) {
@@ -107,8 +108,9 @@ public class LocationProviders {
 
     @Override
     public String newDataLocation(String filename) {
-      int hash = HASH_FUNC.apply(filename);
-      return String.format("%s/%08x/%s/%s", storageLocation, hash, context, filename);
+      final Transform<String, Integer> HASH_FUNC = Transforms.bucket(Types.StringType.get(), writeTargetHashCount);
+      String hash = new StringBuilder(String.format("%08x", HASH_FUNC.apply(filename))).reverse().toString();
+      return String.format("%s/%s/%s/%s", storageLocation, hash, context, filename);
     }
 
     private static String pathContext(String tableLocation) {

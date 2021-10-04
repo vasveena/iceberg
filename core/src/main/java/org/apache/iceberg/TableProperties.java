@@ -129,6 +129,10 @@ public class TableProperties {
   public static final String WRITE_TARGET_FILE_SIZE_BYTES = "write.target-file-size-bytes";
   public static final long WRITE_TARGET_FILE_SIZE_BYTES_DEFAULT = Long.MAX_VALUE;
 
+  // Number of possible hashes for ObjectStoreLocationProvider
+  public static final String WRITE_TARGET_FILE_HASH_COUNT = "write.target-file-hash-count";
+  public static final int WRITE_TARGET_FILE_HASH_COUNT_DEFAULT = Integer.MAX_VALUE;
+
   public static final String SPARK_WRITE_PARTITIONED_FANOUT_ENABLED = "write.spark.fanout.enabled";
   public static final boolean SPARK_WRITE_PARTITIONED_FANOUT_ENABLED_DEFAULT = false;
 
